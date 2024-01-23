@@ -20,7 +20,7 @@ def main():
         wordToGuess = select_word(validWords)
         try_word(driver, wordToGuess)
         wordGuessed = get_guess_result(driver, guessNumber)
-        validWords = filter_word_list(validWords)
+        validWords = filter_word_list(driver, guessNumber, validWords, wordToGuess)
         guessNumber += 1
 
     if wordGuessed:
@@ -59,14 +59,30 @@ def select_word(validWords):
     return validWords[random.randrange(len(validWords))]
 
 def get_guess_result(driver, rowNumber):
-    row = driver.find_elements(By.XPATH, f"//div[@aria-label='Row {rowNumber}']/*/*")
+    row = get_row(driver, rowNumber)
     for letter in row:
-        if letter.accessible_name.find("absent") >= 0 or letter.accessible_name.find("present in another position") >= 0:
+        if letter.accessible_name.find("absent") >= 0 or letter.accessible_name.find("present") >= 0:
             return False
     return True
 
-def filter_word_list(validWords):
+def filter_word_list(driver, guessNumber, validWords, guessedWord):
+    validWords.remove(guessedWord)
+    row = get_row(driver, guessNumber)
+    filter_for_correct_letters(row, validWords)
     return validWords
+
+def filter_for_correct_letters(row, validWords):
+    for letter in row:
+        rowInfo = letter.accessible_name.replace(" ", "").split(',')
+        if rowInfo[2].find('correct') >= 0:
+            charIndex = int(rowInfo[0][0]) - 1
+            for word in validWords[:]:
+                if word[charIndex] != rowInfo[1].lower():
+                    validWords.remove(word)
+    return validWords
+
+def get_row(driver, rowNumber):
+    return driver.find_elements(By.XPATH, f"//div[@aria-label='Row {rowNumber}']/*/*")
 
 if __name__ == "__main__":
     main()
