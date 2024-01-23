@@ -9,15 +9,16 @@ import time
 import random
 
 def main():
+    wordToGuess = input("Please enter starting word\n> ")
     validWords = get_valid_words()
     driver = setup_driver()
     open_wordle(driver)
     wordGuessed = False
     guessNumber = 1
-    wordToGuess = ""
 
     while (not wordGuessed and guessNumber < 7):
-        wordToGuess = select_word(validWords)
+        if not validWords.count(wordToGuess):
+            wordToGuess = select_word(validWords)
         try_word(driver, wordToGuess)
         wordGuessed = get_guess_result(driver, guessNumber)
         validWords = filter_word_list(driver, guessNumber, validWords, wordToGuess)
