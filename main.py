@@ -69,15 +69,40 @@ def filter_word_list(driver, guessNumber, validWords, guessedWord):
     validWords.remove(guessedWord)
     row = get_row(driver, guessNumber)
     filter_for_correct_letters(row, validWords)
+    filter_for_present_letters(row, validWords)
+    filter_for_absent_letters(row, validWords, guessedWord)
     return validWords
 
 def filter_for_correct_letters(row, validWords):
     for letter in row:
-        rowInfo = letter.accessible_name.replace(" ", "").split(',')
-        if rowInfo[2].find('correct') >= 0:
-            charIndex = int(rowInfo[0][0]) - 1
+        letterInfo = letter.accessible_name.replace(" ", "").split(',')
+        if letterInfo[2].find('correct') >= 0:
+            charIndex = int(letterInfo[0][0]) - 1
             for word in validWords[:]:
-                if word[charIndex] != rowInfo[1].lower():
+                if word[charIndex] != letterInfo[1].lower():
+                    validWords.remove(word)
+    return validWords
+
+def filter_for_present_letters(row, validWords):
+    for letter in row:
+        letterInfo = letter.accessible_name.replace(" ", "").split(',')
+        if letterInfo[2].find("present") >= 0:
+            charIndex = int(letterInfo[0][0]) - 1
+            for word in validWords[:]:
+                if word.count(letterInfo[1].lower()) == 0:
+                    validWords.remove(word)
+                    continue
+                if word.count(letterInfo[1].lower()) > 0 and word[charIndex] == letterInfo[1].lower():
+                    validWords.remove(word)
+    return validWords
+
+def filter_for_absent_letters(row, validWords, guessedWord):
+    for letter in row:
+        letterInfo = letter.accessible_name.replace(" ", "").split(',')
+        if letterInfo[2].find("absent") >= 0:
+            absentLetterCount = guessedWord.count(letterInfo[1].lower())
+            for word in validWords[:]:
+                if word.count(letterInfo[1].lower()) >= absentLetterCount:
                     validWords.remove(word)
     return validWords
 
