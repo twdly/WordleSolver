@@ -1,4 +1,3 @@
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium import webdriver 
 from selenium.webdriver.chrome.service import Service 
@@ -15,11 +14,19 @@ def main():
     open_wordle(driver)
     wordGuessed = False
     guessNumber = 1
-    wordToGuess = "audio"
-    while (not wordGuessed | guessNumber == 7):
-        try_word(driver, wordToGuess)
+    wordToGuess = ""
+
+    while (not wordGuessed and guessNumber < 7):
         wordToGuess = select_word(validWords)
+        try_word(driver, wordToGuess)
+        wordGuessed = get_guess_result(driver, guessNumber)
+        validWords = filter_word_list(validWords)
         guessNumber += 1
+
+    if wordGuessed:
+        print(f"The word is {wordToGuess}")
+    else:
+        print("Cringe has been posted")
     
 
 def setup_driver():
@@ -51,8 +58,15 @@ def get_valid_words():
 def select_word(validWords):
     return validWords[random.randrange(len(validWords))]
 
-def get_guess_result(driver):
-    board = driver.find_element(By.CLASS_NAME, "Board-module_board__jeoPS")
+def get_guess_result(driver, rowNumber):
+    row = driver.find_elements(By.XPATH, f"//div[@aria-label='Row {rowNumber}']/*/*")
+    for letter in row:
+        if letter.accessible_name.find("absent") >= 0 or letter.accessible_name.find("present in another position") >= 0:
+            return False
+    return True
+
+def filter_word_list(validWords):
+    return validWords
 
 if __name__ == "__main__":
     main()
